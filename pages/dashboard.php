@@ -2,6 +2,7 @@
 session_start();
 if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
 
+ 
  ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -125,7 +126,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
           <p class="my-2 text-bold fs-3">Pilih Layanan</p>
         </div>
         <div class="container-fluid">
-        <form action="">
+        <form action="backend/proses_transaksi.php" method="post">
           <div class="px-5">
             <div class="input-group input-group-outline my-4  ">
               <label class="form-label">Nama Pelanggan</label>
@@ -133,26 +134,26 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
             </div>
             <div class="input-group input-group-outline my-4">
             
-            <select class="form-control" id="exampleFormControlSelect1">
-              <option selected>Jenis Layanan</option>
-              <option value="1">Potong Rambut</option>
-              <option value="2">Potong Keramas</option>
-              <option value="3">Cat Rambut</option>
+            <select class="form-control" name="jenis_layanan" id="jenisLayanan" required>
+            <option value="" selected disabled>Pilih Jenis Layanan</option>
+            <option value="1" data-price="30000">Potong Rambut</option>
+            <option value="2" data-price="50000">Potong Keramas</option>
+            <option value="3" data-price="100000">Cat Rambut</option>
             </select>
             </div>
             <div class="input-group input-group-outline my-4  ">
               <label class="form-label">Uang Customer</label>
-              <input type="number"  name="nama_pelanggan" class="form-control">
+              <input type="number" name="uang_customer" id="uangCustomer" class="form-control" required>
             </div>
             <div>
-            <p class="text-end">Total Harga</p>
+            <p class="text-end">Total Harga: Rp <span id="totalHarga">0</span></p>
+            <p class="text-end">Kembalian: Rp <span id="kembalian">0</span></p>
             </div>
             <div class="d-flex justify-content-end">
-            <a href="" class="btn bg-gradient-primary btn-link text-end">Bayar</a>
+            <button type="submit" class="btn bg-gradient-primary btn-link text-end">Bayar</button>
             </div>
-           
           </div>
-      
+          <input type="hidden" name="total_harga" id="totalHargaHidden">
         </form>
         </div>
        
@@ -221,6 +222,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
   </div>
  
   <!--   Core JS Files   -->
+  <script src="../resources/js/core/script.js"></script>
   <script src="../resources/js/core/popper.min.js"></script>
   <script src="../resources/js/core/bootstrap.min.js"></script>
   <script src="../resources/js/plugins/perfect-scrollbar.min.js"></script>
@@ -486,6 +488,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="../resources/js/material-dashboard.min.js?v=3.1.0"></script>
+  
 </body>
 
 </html>
