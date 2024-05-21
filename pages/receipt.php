@@ -1,4 +1,5 @@
 <?php
+session_start();
 if (isset($_GET['nama_pelanggan']) && isset($_GET['tanggal_transaksi']) && 
     isset($_GET['jenis_layanan']) && isset($_GET['total_harga']) && isset($_GET['uang_customer'])) {
 
@@ -8,6 +9,7 @@ if (isset($_GET['nama_pelanggan']) && isset($_GET['tanggal_transaksi']) &&
     $total_harga = $_GET['total_harga'];
     $uang_customer = $_GET['uang_customer'];
     $kembalian = $uang_customer - $total_harga;
+    $nama_kasir = $_SESSION['name'];
 } else {
     echo "Data transaksi tidak ditemukan.";
     exit();
@@ -58,10 +60,11 @@ if (isset($_GET['nama_pelanggan']) && isset($_GET['tanggal_transaksi']) &&
     
 <div class="d-flex justify-content-center p-5 m-0" id="cobaprintini">
     <div class="card card-custom m-0 border" >
-        <p class="text-bold fs-4 text-center">Thank You</p>
+        <p class="text-bold fs-4 text-center">Nagata Salon</p>
         <hr class="border border-info border-1 opacity-50 m-0" >
         <p class="text-end m-0 "><?php echo  $tanggal_transaksi; ?></p>
-        <p class="text-end m-0 "><?php echo  $nama_pelanggan; ?></p>
+        <p class="text-end m-0 ">thank you,<?php echo  $nama_pelanggan; ?></p>
+        <p class="text-end m-0 ">from,<?php echo  $nama_kasir; ?></p>
         <hr class="border border-info border-1 opacity-50  m-0">
         <p class="text-center mt-3">Transaksi</p>
         <div class="row">
@@ -95,34 +98,37 @@ if (isset($_GET['nama_pelanggan']) && isset($_GET['tanggal_transaksi']) &&
 </div>
 
 <script>
-      function printPageAsPDF() {
-        const doc = new jsPDF();
+    function printPageAsPDF() {
+        const doc = new jsPDF('p', 'mm', 'a4');
         const element = document.getElementById("cobaprintini");
         const downloadButton = document.getElementById("downloadButton");
         downloadButton.style.display = "none";
-       if (element) {
-                html2canvas(element, { scale: 2 }).then(function (canvas) {
-                    const imageData = canvas.toDataURL("image/jpeg", 1.0);
-                    const pdf = new jsPDF('p', 'pt', 'a4');
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-                    const imgWidth = canvas.width;
-                    const imgHeight = canvas.height;
-                    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-                    const imgX = (pdfWidth - imgWidth * ratio) / 2;
-                    const imgY = (pdfHeight - imgHeight * ratio) / 2;
+        if (element) {
+            // Perbesar elemen sebelum mengambil screenshot
+            element.style.transform = "scale(2)";
+            element.style.transformOrigin = "top left";
+            element.style.width = "40%"; // Menyesuaikan lebar elemen
 
-                    pdf.addImage(imageData, "JPEG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-                    pdf.save("Your_Bill_Sir.pdf");
+            html2canvas(element).then(function (canvas) {
+                const imgWidth = doc.internal.pageSize.getWidth();
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                const imageData = canvas.toDataURL("image/jpeg", 1.0);
+                doc.addImage(imageData, "JPEG", 0, 0, imgWidth, imgHeight);
+                doc.save("Your_Bill_Sir.pdf");
 
-                    // Arahkan ke halaman baru setelah mencetak
-                    window.location.href = "dashboard.php";
-                });
-            } else {
-                console.error("Element with id 'cobaprintini' not found.");
-            }
-      }
-    </script>
+                // Mengembalikan elemen ke ukuran aslinya
+                element.style.transform = "scale(1)";
+                element.style.width = "100%";
+
+                // Arahkan ke halaman baru setelah mencetak
+                window.location.href = "kelola.php";
+            });
+        } else {
+            console.error("Element with id 'cobaprintini' not found.");
+        }
+    }
+</script>
+
 
 <script src="../resources/js/core/popper.min.js"></script>
   <script src="../resources/js/core/bootstrap.min.js"></script>

@@ -11,7 +11,7 @@ if ($_SESSION['role'] !== 'owner') {
 // Periksa apakah pengguna sudah login
 if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
   include('connection/db_conn.php');
-  $sql = "SELECT SUM(total) AS total_pemasukan FROM transaksi";
+  $sql = "SELECT SUM(total) AS total_pemasukan FROM transaksi WHERE tanggal_transaksi >= NOW() - INTERVAL 7 DAY";
   $result = $conn->query($sql);
   
   if ($result->num_rows > 0) {
@@ -75,6 +75,11 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
         input[type="number"] {
             -moz-appearance: textfield;
         }
+    .card.h-100 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
     </style>
 <body class="g-sidenav-show  bg-gray-200">
   <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3   bg-gradient-dark" id="sidenav-main">
@@ -152,26 +157,26 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
     </nav>
     <!-- End Navbar -->
     <div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-xl-8 col-sm-6 mb-3">
-          <div class="card">
+    <div class="row ">
+        <div class="col-xl-9 col-md-6 mb-3">
+          <div class="card h-100">
             <div class="card-header p-3 pt-2">
               <div class="icon icon-lg icon-shape bg-gradient-info shadow-info text-center border-radius-xl mt-n4 position-absolute">
                 <i class="material-icons opacity-10">account_balance</i>
               </div>
               <div class="text-end pt-1">
                 <p class="text-sm mb-0 text-capitalize">Pemasukan</p>
-                <h4 class="mb-0">Rp. <?php echo number_format($total_pemasukan, 0, ',', '.');?></h4>
+                <h4 class="mb-0 fs-2">Rp. <?php echo number_format($total_pemasukan, 0, ',', '.');?>/Minggu</h4>
               </div>
             </div>
             <hr class="dark horizontal my-0">
-            <div class="card-footer p-2">
+            <div class="card-footer p-2 ">
               <a href="backend/export-transaksi.php" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Download dalam bentuk excel" data-container="body" data-animation="true"><i class="material-icons">download</i> Download</a>
             </div>
           </div>
         </div>
-        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-          <div class="card">
+        <div class="col-xl-3 col-md-6 mb-3 ">
+          <div class="card h-100">
             <div class="card-header p-3 pt-2">
               <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xl mt-n4 position-absolute">
                 <i class="material-icons opacity-10">group</i>
@@ -192,7 +197,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
       <div class="row" style="max-height: 100%;">
       
      
-        <div class="col-7 col-sm-8" >
+        <div class="col-md-12 col-xl-6" >
         <div class="  d-flex justify-content-end " >
         <div class="position-absolute ms-5"style="z-index: 100;">
           <a  data-bs-toggle="modal" data-bs-target="#exampleModal" class="btn btn-primary"><i class="material-icons">add</i></a>
@@ -204,7 +209,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
               <table class="table align-items-center mb-0">
               <thead>
         <tr>
-          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">ID Layanan</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nomor Layanan</th>
           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nama Layanan</th>
           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Harga Layanan</th>
           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Action</th>
@@ -215,6 +220,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
       <tbody>
         <?php 
         $limit = 5;
+        $no = 1;
         $page = isset($_GET['page']) ? $_GET['page']  : 1;
         $start= ($page - 1) * $limit;
 
@@ -223,15 +229,17 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
         if ($result === false) {
           die('Error: ' . $conn->error);
       }
+     
       if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
           echo ("
           <tr>
             <td>
               <div class=''>
-                <h6 class='text-sm font-weight-normal mb-0' >{$row['id_layanan']}</h6>
+                <h6 class='text-sm font-weight-normal mb-0' >{$no}</h6>
               </div>
             </td>
+            
             <td>
               <div class=''>
                 <h6 class='text-sm font-weight-normal mb-0'>{$row['nama_layanan']}</h6>
@@ -244,9 +252,10 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
             </td>
             <td class=' text-sm'>
               <div class='col d-flex'>
-              <form action='backend/proses_delete_layanan.php?id={$row['id_layanan']}' class='me-1' method='post' id='deleteForm'>
-                <a href='#' class='btn btn-danger' onClick='showDeleteConfirmation()'><i class='material-icons'>delete</i></a>
+              <form action='backend/proses_delete_layanan.php' class='me-1' method='get' id='deleteForm_{$row['id_layanan']}'>
+              <input type='hidden' name='id_layanan' value='{$row['id_layanan']}'>
               </form>
+              <button class='btn btn-danger' onClick='showDeleteConfirmation({$row['id_layanan']})'><i class='material-icons'>delete</i></button>
               <a data-bs-toggle='modal' data-bs-target='#staticBackdrop1{$row['id_layanan']}' class='btn btn-warning'><i class='material-icons'>edit</i></a>
             </div>
               </div>
@@ -254,6 +263,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
            
           </tr>
           ");
+          $no++;
         }
       } else {
           // Menampilkan pesan jika data tidak ditemukan
@@ -301,7 +311,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
                       ?>
         </div>
         <!-- AKUN TABLE -->
-        <div class="col-5 col-sm-4" >
+        <div class="col-md-12 col-xl-6" >
         <div class="  d-flex justify-content-end " >
         <div class="position-absolute ms-5"style="z-index: 100;">
           <a  data-bs-toggle="modal" data-bs-target="#exampleModal2" class="btn btn-primary"><i class="material-icons">add</i></a>
@@ -313,7 +323,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
               <table class="table align-items-center mb-0">
               <thead>
         <tr>
-          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">ID Users</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nomor Users</th>
           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nama User</th>
           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Password User</th>
           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Role User</th>
@@ -325,7 +335,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
       <tbody>
         <?php 
         include ('connection/db_conn.php');
-     
+        $no = 1;
         $page = isset($_GET['page']) ? $_GET['page']  : 1;
        
 
@@ -340,7 +350,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
           <tr>
             <td>
               <div class=''>
-                <h6 class='text-sm font-weight-normal mb-0' >{$row['id']}</h6>
+                <h6 class='text-sm font-weight-normal mb-0' >{$no}</h6>
               </div>
             </td>
             <td>
@@ -360,10 +370,10 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
             </td>
             <td class=' text-sm'>
               <div class='col d-flex'>
-              <form action='backend/proses_delete_user.php' class='me-1' method='get' id='deleteFormUser'>
+              <form action='backend/proses_delete_user.php' class='me-1' method='get' id='deleteFormUser_{$row['id']}'>
                 <input type='hidden' name='id' value='{$row['id']}'>
-                <a href='#' class='btn btn-danger' onClick='showDeleteConfirmationUser()'><i class='material-icons'>delete</i></a>
-              </form>
+                </form>
+                <a href='#' class='btn btn-danger' onClick='showDeleteConfirmationUser({$row['id']})'><i class='material-icons'>delete</i></a>
               <a data-bs-toggle='modal' data-bs-target='#editModal{$row['id']}' class='btn btn-warning'><i class='material-icons'>edit</i></a>
             </div>
               </div>
@@ -371,6 +381,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
            
           </tr>
           ");
+          $no++;
         }
       } else {
           // Menampilkan pesan jika data tidak ditemukan
@@ -520,7 +531,8 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
 </div>
 
   <!-- MODAL ADD END -->
- <!-- MODAL ENTRY FOR  EDIT-->
+
+ <!-- MODAL ENTRY FOR  EDIT LAYANAN-->
  <?php
     include ('connection/db_conn.php');
     $result = mysqli_query($conn, "SELECT * FROM layanan");
@@ -556,10 +568,58 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
         </div>";
     }
 ?>
- <!-- MODAL END -->
+ <!-- MODAL END FOR EDIT LAYANAN -->
+
+ <!-- MODAL ENTRY FOR  EDIT USER-->
+ <?php
+    include ('connection/db_conn.php');
+    $result = mysqli_query($conn, "SELECT * FROM users");
+    while ($d = mysqli_fetch_assoc($result)) {
+        echo "
+        <div class='modal fade' id='editModal{$d['id']}' data-bs-backdrop='static' data-bs-keyboard='false' tabindex='-1' aria-labelledby='staticBackdropLabel' aria-hidden='true'>
+        <div class='modal-dialog modal-dialog-centered'>
+        <div class='modal-content'>
+        <div class='modal-header bg-primary justify-content-center d-flex'>
+        <h1 class='modal-title fs-3 text-white' id='staticBackdropLabel'>Edit User</h1>
+        </div>
+            <form action='backend/proses_edit_users.php' method='post' role='form'>
+                <div class='modal-body'>
+                    <div class='form-group'>
+                        <div class='row'>
+                            <input type='hidden' name='id' value='{$d['id']}'>
+                            <div class='input-group input-group-outline my-3'>
+                                <input type='text' id='name' name='name' class='form-control' value='{$d['name']}' required='' placeholder='' />
+                            </div>
+                            <div class='input-group input-group-outline my-3'>
+                                <input type='text' id='username' name='username' class='form-control' value='{$d['user_name']}' required='' placeholder='' />
+                            </div>
+                            <div class='input-group input-group-outline my-3'>
+                                <input type='text' id='password' name='password' class='form-control' value='{$d['password']}' required='' placeholder='' />
+                            </div>
+                            <div class='input-group input-group-outline my-3'>
+                              <select name='role_user' class='form-control' id='roleuser'>
+                               
+                                <option value='kasir'>Kasir</option>
+                                <option value='owner'>Owner</option>
+                              </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='modal-footer'>
+                        <button type='button' class='btn btn-danger' data-bs-dismiss='modal'>Close</button>
+                        <button type='submit' class='btn btn-success'>Submit</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        </div>
+        </div>";
+    }
+?>
+ <!-- MODAL END FOR EDIT USER -->
  
   <!--   Core JS Files   -->
-  <script src="../resources/js/core/script.js"></script>
+
   <script src="../resources/js/core/popper.min.js"></script>
   <script src="../resources/js/core/bootstrap.min.js"></script>
   <script src="../resources/js/plugins/perfect-scrollbar.min.js"></script>
@@ -567,7 +627,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
   <script src="../resources/js/plugins/chartjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
-        function showDeleteConfirmation() {
+        function showDeleteConfirmation(id) {
             Swal.fire({
                 title: 'Konfirmasi Hapus?',
                 text: 'Anda yakin ingin Menghapus Data ini?',
@@ -579,33 +639,15 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Lakukan submit formulir jika konfirmasi diterima
-                    document.getElementById('deleteForm').submit();
+                    document.getElementById('deleteForm_'+ id).submit();
                 }
             });
         }
        
     </script>
+  
   <script>
-        function editConfirmation(id_layanan) {
-            Swal.fire({
-                title: 'Konfirmasi Mengubah',
-                text: 'Anda yakin ingin Mengubah ini?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Mengubah'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Lakukan submit formulir jika konfirmasi diterima
-                    document.getElementById('editForm_'+ id_layanan).submit();
-                }
-            });
-        }
-       
-    </script>
-  <script>
-        function showDeleteConfirmationUser() {
+        function showDeleteConfirmationUser(id) {
             Swal.fire({
                 title: 'Konfirmasi Hapus?',
                 text: 'Anda yakin ingin Hapus Data ?',
@@ -617,7 +659,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Lakukan submit formulir jika konfirmasi diterima
-                    document.getElementById('deleteFormUser').submit();
+                    document.getElementById('deleteFormUser_'+ id).submit();
                 }
             });
         }

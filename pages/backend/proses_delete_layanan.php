@@ -1,7 +1,12 @@
 <?php
 include('../connection/db_conn.php');
 
-// Debugging: Tampilkan isi $_GET untuk memeriksa parameter
+// Pastikan koneksi berhasil
+if ($conn->connect_error) {
+    die("Koneksi gagal: " . $conn->connect_error);
+}
+
+// Debugging: Tampilkan isi $_GET untuk memeriksa parameter (hapus setelah debugging)
 var_dump($_GET);
 
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['id_layanan'])) {
@@ -16,21 +21,26 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['id_layanan'])) {
         // Menyiapkan pernyataan prepared statement
         $stmt = $conn->prepare($sql);
         
-        // Bind parameter ke pernyataan prepared statement
-        $stmt->bind_param("i", $id);
-        
-        // Menjalankan pernyataan prepared statement dan menangani kesalahan
-        if ($stmt->execute()) {
-            // Jika penghapusan berhasil, arahkan kembali ke halaman utama
-            echo "<script>alert('Data Berhasil Dihapus.');window.location='../kelola.php';</script>";
-            exit(); // Pastikan untuk keluar setelah menggunakan header
+        if ($stmt) {
+            // Bind parameter ke pernyataan prepared statement
+            $stmt->bind_param("i", $id);
+            
+            // Menjalankan pernyataan prepared statement dan menangani kesalahan
+            if ($stmt->execute()) {
+                // Jika penghapusan berhasil, arahkan kembali ke halaman utama
+                echo "<script>alert('Data Berhasil Dihapus.');window.location='../kelola.php';</script>";
+                exit(); // Pastikan untuk keluar setelah menggunakan header
+            } else {
+                // Jika terjadi kesalahan, tampilkan pesan kesalahan
+                echo "Error: " . $stmt->error;
+            }
+            
+            // Menutup prepared statement
+            $stmt->close();
         } else {
-            // Jika terjadi kesalahan, tampilkan pesan kesalahan
-            echo "Error: " . $stmt->error;
+            // Jika persiapan pernyataan gagal, tampilkan pesan kesalahan
+            echo "Error: " . $conn->error;
         }
-        
-        // Menutup prepared statement
-        $stmt->close();
     } else {
         // Jika id_layanan tidak valid, tampilkan pesan kesalahan
         echo "Parameter ID tidak valid.";
@@ -39,4 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['id_layanan'])) {
     // Jika parameter tidak valid atau bukan metode GET, tampilkan pesan kesalahan
     echo "Parameter ID tidak valid atau bukan metode GET.";
 }
+
+// Menutup koneksi
+$conn->close();
 ?>
