@@ -34,6 +34,7 @@ if (isset($_POST['uname']) && isset($_POST['password'])) {
 			$row = $result->fetch_assoc();
             if ($row['user_name'] === $uname && $row['password'] === $pass) {
             	$_SESSION['user_name'] = $row['user_name'];
+            	$_SESSION['role'] = $row['role'];
             	$_SESSION['name'] = $row['name'];
             	$_SESSION['id'] = $row['id'];
             	header("Location: ../dashboard.php");

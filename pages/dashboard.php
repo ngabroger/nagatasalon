@@ -1,8 +1,13 @@
 <?php 
 session_start();
-if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
-
- 
+if (!isset($_SESSION['id']) || !isset($_SESSION['user_name']) || !isset($_SESSION['role'])) {
+  // Jika tidak, arahkan pengguna ke halaman indeks
+  header("Location: index.php");
+  exit();
+}
+ include ('connection/db_conn.php');
+ $sql = "SELECT id_layanan, nama_layanan, harga_layanan FROM layanan";
+ $result = $conn->query($sql);
  ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -56,7 +61,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
     <div class="collapse navbar-collapse  w-auto " id="sidenav-collapse-main">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link text-white active bg-gradient-primary" href="../pages/dashboard.html">
+          <a class="nav-link text-white active bg-gradient-primary" href="#">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
               <i class="material-icons opacity-10">dashboard</i>
             </div>
@@ -64,7 +69,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-white " href="../pages/tables.html">
+          <a class="nav-link text-white " href="../pages/kelola.php">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
               <i class="material-icons opacity-10">table_view</i>
             </div>
@@ -135,11 +140,15 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
             <div class="input-group input-group-outline my-4">
             
             <select class="form-control" name="jenis_layanan" id="jenisLayanan" required>
-            <option value="" selected disabled>Pilih Jenis Layanan</option>
-            <option value="1" data-price="30000">Potong Rambut</option>
-            <option value="2" data-price="50000">Potong Keramas</option>
-            <option value="3" data-price="100000">Cat Rambut</option>
-            </select>
+          <option value="" selected disabled>Pilih Jenis Layanan</option>
+          <?php
+          if ($result->num_rows > 0) {
+            while($row = $result->fetch_assoc()) {
+              echo '<option value="' . $row["id_layanan"] . '" data-price="' . $row["harga_layanan"] . '">' . $row["nama_layanan"] . '</option>';
+            }
+          }
+          ?>
+        </select>
             </div>
             <div class="input-group input-group-outline my-4  ">
               <label class="form-label">Uang Customer</label>
@@ -493,8 +502,5 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
 
 </html>
  <?php 
-}else{
-     header("Location: index.php");
-     exit();
-}
+
      ?>
