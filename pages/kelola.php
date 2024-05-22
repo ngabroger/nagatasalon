@@ -667,6 +667,17 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
  <!-- MODAL ENTRY FOR  EDIT TRANSAKSI-->
  <?php
     include ('connection/db_conn.php');
+    // Ambil daftar jenis layanan
+$layananQuery = "SELECT id_layanan, nama_layanan FROM layanan";
+$layananResult = $conn->query($layananQuery);
+
+// Simpan hasil dalam array
+$layananList = [];
+if ($layananResult->num_rows > 0) {
+    while ($row = $layananResult->fetch_assoc()) {
+        $layananList[] = $row;
+    }
+}
     $result = mysqli_query($conn, "SELECT * FROM transaksi");
     while ($d = mysqli_fetch_assoc($result)) {
         echo "
@@ -688,7 +699,17 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
                                 <input type='text' id='harga' name='nama_pelanggan' class='form-control required' value='{$d['nama_pelanggan']}' required='' placeholder='' />
                             </div>
                             <div class='input-group input-group-outline my-3'>
-                                <input type='text' id='harga' name='jenis_layanan' class='form-control required' value='{$d['jenis_layanan']}' required='' placeholder='' />
+                            <select class='form-control' name='jenis_layanan' id='jenisLayanan' required>
+                           ";
+                            
+                           foreach ($layananList as $layanan) {
+                            $selected = $d['jenis_layanan'] == $layanan['nama_layanan'] ? 'selected' : '';
+                            echo "<option value='{$layanan['nama_layanan']}' $selected>{$layanan['nama_layanan']}</option>";
+                        }
+                        
+                          echo "  
+                          </select>
+                               
                             </div>
                             <div class='input-group input-group-outline my-3'>
                                 <input type='text' id='harga' name='total' class='form-control required' value='{$d['total']}' required='' placeholder='' />
