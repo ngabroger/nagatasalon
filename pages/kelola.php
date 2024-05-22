@@ -4,7 +4,7 @@ session_start();
 // Periksa apakah peran pengguna adalah 'owner'
 if ($_SESSION['role'] !== 'owner') {
   // Jika tidak, arahkan pengguna ke halaman lain atau tampilkan pesan kesalahan
-  echo "<script>alert('Akses ditolak. Halaman ini hanya untuk pemilik.');window.location='dashboard.php';</script>";
+  echo "<script>alert('Akses ditolak. Halaman ini hanya untuk pemilik.');window.location='kasir.php';</script>";
   exit(); // Pastikan untuk keluar dari skrip setelah mengarahkan pengguna
 }
 
@@ -45,7 +45,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
   <link rel="apple-touch-icon" sizes="76x76" href="../resources/img/apple-icon.png">
   <link rel="icon" type="image/png" href="../resources/img/favicon.png">
   <title>
-
+  Nagata Salon | Kelola
   </title>
   <!--     Fonts and icons     -->
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700" />
@@ -94,11 +94,11 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
     <div class="collapse navbar-collapse  w-auto " id="sidenav-collapse-main">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link text-white " href="../pages/dashboard.php">
+          <a class="nav-link text-white " href="../pages/kasir.php">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
               <i class="material-icons opacity-10">dashboard</i>
             </div>
-            <span class="nav-link-text ms-1">Dashboard</span>
+            <span class="nav-link-text ms-1">Kasir</span>
           </a>
         </li>
         <li class="nav-item">
@@ -219,12 +219,9 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
       </thead>
       <tbody>
         <?php 
-        $limit = 5;
-        $no = 1;
-        $page = isset($_GET['page']) ? $_GET['page']  : 1;
-        $start= ($page - 1) * $limit;
+       $no =1;
 
-        $query = "SELECT * FROM layanan LIMIT $start, $limit";
+        $query = "SELECT * FROM layanan ";
         $result = $conn->query($query);
         if ($result === false) {
           die('Error: ' . $conn->error);
@@ -277,38 +274,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
               </table>
             </div>
           </div>
-          <?php
-                      // Include file koneksi database
-                      include "connection/db_conn.php";
-
-                      // Query untuk mendapatkan total data
-                      $queryTotal = "SELECT COUNT(id_layanan) as total FROM layanan";
-                      $resultTotal = $conn->query($queryTotal);
-                      $dataTotal = $resultTotal->fetch_assoc();
-                      $totalPages = ceil($dataTotal['total'] / $limit);
-
-                      // Menentukan halaman saat ini
-                      $current_page = isset($_GET['page']) ? $_GET['page'] : 1;
-
-                      // Menampilkan tombol "Previous" jika halaman saat ini lebih dari 1
-                      echo '<ul class="pagination justify-content-center">';
-                      if ($current_page > 1) {
-                          echo '<li class="page-item"><a class="page-link " href="?page=' . ($current_page - 1) . '"><i class="material-icons">arrow_back_ios</i></a></li>';
-                      }
-
-                      // Menampilkan nomor-nomor halaman
-                      for ($i = 1; $i <= $totalPages; $i++) {
-                        echo '<li class="page-item ' . ($current_page == $i ? 'active ' : '') . '"><a class="page-link " href="?page=' . $i . '">' . $i . '</a></li>';
-                      }
-                      // Menampilkan tombol "Next" jika halaman saat ini kurang dari total halaman
-                      if ($current_page < $totalPages) {
-                          echo '<li class="page-item"><a class="page-link " href="?page=' . ($current_page + 1) . '"><i class="material-icons">arrow_forward_ios</i></a></li>';
-                      }
-
-                      echo '</ul>';
-
-                      $conn->close();
-                      ?>
+      
         </div>
         <!-- AKUN TABLE -->
         <div class="col-md-12 col-xl-6" >
@@ -398,6 +364,135 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
          
         </div>
       </div>
+
+
+
+      <!-- TABLE TRANSAKSI -->
+      <div class="mt-4" >
+        <div class="  d-flex justify-content-end " >
+       
+        </div>
+          <div class="card p-3" style="height: 250px;">
+            <div class="table-responsive">
+              <table class="table align-items-center mb-0">
+              <thead>
+        <tr>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nomor Layanan</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Tanggal Transaksi</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nama  Pelanggan</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Jenis Layanan</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Total</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Action</th>
+       
+         
+        </tr>
+      </thead>
+      <tbody>
+        <?php 
+        include('connection/db_conn.php');
+       $no =1;
+       $limit = 5;
+       $page = isset($_GET['page']) ? $_GET['page']  : 1;
+       $start= ($page - 1) * $limit;
+        $query = "SELECT * FROM transaksi LIMIT $start, $limit ";
+        $result = $conn->query($query);
+        if ($result === false) {
+          die('Error: ' . $conn->error);
+      }
+     
+      if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+          echo ("
+          <tr>
+            <td>
+              <div class=''>
+                <h6 class='text-sm font-weight-normal mb-0' >{$no}</h6>
+              </div>
+            </td>
+            
+            <td>
+              <div class=''>
+              <h6 class='text-sm font-weight-normal mb-0'>{$row['tanggal_transaksi']}</h6>
+              </div>
+            </td>
+            <td>
+              <div class=''>
+              <h6 class='text-sm font-weight-normal mb-0'>{$row['nama_pelanggan']}</h6>
+              </div>
+            </td>
+            <td>
+              <div class=''>
+              <h6 class='text-sm font-weight-normal mb-0'>{$row['jenis_layanan']}</h6>
+              </div>
+            </td>
+            <td>
+              <div class=''>
+              <h6 class='text-sm font-weight-normal mb-0'>{$row['total']}</h6>
+              </div>
+            </td>
+            <td class=' text-sm'>
+              <div class='col d-flex'>
+              <form action='backend/proses_delete_transaksi.php' class='me-1' method='get' id='deleteFormTransaksi_{$row['id_transaksi']}'>
+              <input type='hidden' name='id_transaksi' value='{$row['id_transaksi']}'>
+              </form>
+              <button class='btn btn-danger' onClick='showDeleteConfirmationTransaksi({$row['id_transaksi']})'><i class='material-icons'>delete</i></button>
+              <a data-bs-toggle='modal' data-bs-target='#staticBackdrop2{$row['id_transaksi']}' class='btn btn-warning'><i class='material-icons'>edit</i></a>
+            </div>
+              </div>
+            </td>
+           
+          </tr>
+          ");
+          $no++;
+        }
+      } else {
+          // Menampilkan pesan jika data tidak ditemukan
+          echo "<tr><td class='text-center' colspan='7'>Data not found.</td></tr>";
+      }
+     
+      
+      $conn->close();
+        ?>
+      </tbody>
+              </table>
+            </div>
+            <div class="justify-content-center m-0 w-full p-0">
+            <?php
+                      // Include file koneksi database
+                      include "connection/db_conn.php";
+
+                      // Query untuk mendapatkan total data
+                      $queryTotal = "SELECT COUNT(id_transaksi) as total FROM transaksi";
+                      $resultTotal = $conn->query($queryTotal);
+                      $dataTotal = $resultTotal->fetch_assoc();
+                      $totalPages = ceil($dataTotal['total'] / $limit);
+
+                      // Menentukan halaman saat ini
+                      $current_page = isset($_GET['page']) ? $_GET['page'] : 1;
+
+                      // Menampilkan tombol "Previous" jika halaman saat ini lebih dari 1
+                      echo '<ul class="pagination justify-content-center">';
+                      if ($current_page > 1) {
+                          echo '<li class="page-item"><a class="page-link " href="?page=' . ($current_page - 1) . '"><i class="material-icons">arrow_back_ios</i></a></li>';
+                      }
+
+                      // Menampilkan nomor-nomor halaman
+                      for ($i = 1; $i <= $totalPages; $i++) {
+                        echo '<li class="page-item ' . ($current_page == $i ? 'active ' : '') . '"><a class="page-link " href="?page=' . $i . '">' . $i . '</a></li>';
+                      }
+                      // Menampilkan tombol "Next" jika halaman saat ini kurang dari total halaman
+                      if ($current_page < $totalPages) {
+                          echo '<li class="page-item"><a class="page-link " href="?page=' . ($current_page + 1) . '"><i class="material-icons">arrow_forward_ios</i></a></li>';
+                      }
+
+                      echo '</ul>';
+
+                      $conn->close();
+                      ?>
+               </div>
+          </div>
+      
+        </div>
     </div>
   </main>
   <div class="fixed-plugin">
@@ -569,6 +664,49 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
     }
 ?>
  <!-- MODAL END FOR EDIT LAYANAN -->
+ <!-- MODAL ENTRY FOR  EDIT TRANSAKSI-->
+ <?php
+    include ('connection/db_conn.php');
+    $result = mysqli_query($conn, "SELECT * FROM transaksi");
+    while ($d = mysqli_fetch_assoc($result)) {
+        echo "
+        <div class='modal fade' id='staticBackdrop2{$d['id_transaksi']}' data-bs-backdrop='static' data-bs-keyboard='false' tabindex='-1' aria-labelledby='staticBackdropLabel' aria-hidden='true'>
+        <div class='modal-dialog modal-dialog-centered'>
+        <div class='modal-content'>
+        <div class='modal-header bg-primary justify-content-center d-flex'>
+        <h1 class='modal-title fs-3 text-white' id='staticBackdropLabel'>Edit Transaksi</h1>
+        </div>
+            <form action='backend/proses_edit_transaksi.php' method='post' role='form'>
+                <div class='modal-body'>
+                    <div class='form-group'>
+                        <div class='row'>
+                            <input type='hidden' name='id' value='{$d['id_transaksi']}'>
+                            <div class='input-group input-group-outline my-3'>
+                                <input type='text' id='nama' name='tanggal_transaksi' class='form-control required' value='{$d['tanggal_transaksi']}' required='' placeholder='' />
+                            </div>
+                            <div class='input-group input-group-outline my-3'>
+                                <input type='text' id='harga' name='nama_pelanggan' class='form-control required' value='{$d['nama_pelanggan']}' required='' placeholder='' />
+                            </div>
+                            <div class='input-group input-group-outline my-3'>
+                                <input type='text' id='harga' name='jenis_layanan' class='form-control required' value='{$d['jenis_layanan']}' required='' placeholder='' />
+                            </div>
+                            <div class='input-group input-group-outline my-3'>
+                                <input type='text' id='harga' name='total' class='form-control required' value='{$d['total']}' required='' placeholder='' />
+                            </div>
+                        </div>
+                    </div>
+                    <div class='modal-footer'>
+                        <button type='button' class='btn btn-danger' data-bs-dismiss='modal'>Close</button>
+                        <button type='submit' class='btn btn-success'>Submit</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        </div>
+        </div>";
+    }
+?>
+ <!-- MODAL END FOR EDIT TRANSAKSI -->
 
  <!-- MODAL ENTRY FOR  EDIT USER-->
  <?php
@@ -640,6 +778,25 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
                 if (result.isConfirmed) {
                     // Lakukan submit formulir jika konfirmasi diterima
                     document.getElementById('deleteForm_'+ id).submit();
+                }
+            });
+        }
+       
+    </script>
+  <script>
+        function showDeleteConfirmationTransaksi(id) {
+            Swal.fire({
+                title: 'Konfirmasi Hapus?',
+                text: 'Anda yakin ingin Menghapus Data ini?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Lakukan submit formulir jika konfirmasi diterima
+                    document.getElementById('deleteFormTransaksi_'+ id).submit();
                 }
             });
         }

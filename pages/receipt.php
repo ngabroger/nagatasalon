@@ -20,7 +20,7 @@ if (isset($_GET['nama_pelanggan']) && isset($_GET['tanggal_transaksi']) &&
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt</title>
+    <title>Nagata Salon | Receipt</title>
     <link rel="apple-touch-icon" sizes="76x76" href="../resources/img/apple-icon.png">
   <link rel="icon" type="image/png" href="../resources/img/favicon.png">
   <title>
@@ -121,7 +121,7 @@ if (isset($_GET['nama_pelanggan']) && isset($_GET['tanggal_transaksi']) &&
                 element.style.width = "100%";
 
                 // Arahkan ke halaman baru setelah mencetak
-                window.location.href = "kelola.php";
+                window.location.href = "kasir.php";
             });
         } else {
             console.error("Element with id 'cobaprintini' not found.");
