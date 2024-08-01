@@ -263,10 +263,10 @@ if ($result->num_rows > 0) {
             </td>
             <td class=' text-sm'>
               <div class='col d-flex'>
-              <form action='backend/proses_delete_layanan.php' class='me-1' method='get' id='deleteForm_{$row['id_layanan']}'>
+              <form action='backend/proses_delete_layanan.php' class='me-1' method='get'>
               <input type='hidden' name='id_layanan' value='{$row['id_layanan']}'>
+              <button class='btn btn-danger' type='submit'><i class='material-icons'>delete</i></button>
               </form>
-              <button class='btn btn-danger' onClick='showDeleteConfirmation({$row['id_layanan']})'><i class='material-icons'>delete</i></button>
               <a data-bs-toggle='modal' data-bs-target='#staticBackdrop1{$row['id_layanan']}' class='btn btn-warning'><i class='material-icons'>edit</i></a>
             </div>
               </div>
@@ -456,13 +456,17 @@ if ($result->num_rows > 0) {
       <div class="modal-body">
         <form action="backend/proses_tambah_layanan.php" method="post" id="tambahLayananForm">
         <div class="input-group input-group-outline my-3">
+          <label class="form-label">ID Layanan</label>
+          <input type="text" name="id_layanan" class="form-control" required>
+        </div>
+        <div class="input-group input-group-outline my-3">
           <label class="form-label">Nama Layanan</label>
-          <input type="text" name="nama_layanan" class="form-control">
+          <input type="text" name="nama_layanan" class="form-control" required>
         </div>
         <div class="input-group input-group-outline mb-3">
           <label class="form-label">Harga</label>
-          <input type="text" name="harga_layanan" class="form-control">
-        </div>          
+          <input type="text" name="harga_layanan" class="form-control" required>
+        </div>
                       
         </form>
       </div>
@@ -675,25 +679,7 @@ if ($layananResult->num_rows > 0) {
   <script src="../resources/js/plugins/smooth-scrollbar.min.js"></script>
   <script src="../resources/js/plugins/chartjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-        function showDeleteConfirmation(id) {
-            Swal.fire({
-                title: 'Konfirmasi Hapus?',
-                text: 'Anda yakin ingin Menghapus Data ini?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Hapus'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Lakukan submit formulir jika konfirmasi diterima
-                    document.getElementById('deleteForm_'+ id).submit();
-                }
-            });
-        }
-       
-    </script>
+ 
   <script>
         function showDeleteConfirmationTransaksi(id) {
             Swal.fire({

@@ -1,14 +1,29 @@
 <?php 
 session_start();
 if (!isset($_SESSION['id']) || !isset($_SESSION['user_name']) || !isset($_SESSION['role'])) {
-  // Jika tidak, arahkan pengguna ke halaman indeks
-  header("Location: index.php");
-  exit();
+    // Jika tidak, arahkan pengguna ke halaman indeks
+    header("Location: index.php");
+    exit();
 }
- include ('connection/db_conn.php');
- $sql = "SELECT id_layanan, nama_layanan, harga_layanan FROM layanan";
- $result = $conn->query($sql);
- ?>
+
+include('connection/db_conn.php');
+
+// Query untuk mendapatkan data layanan
+$sql = "SELECT id_layanan, harga_layanan, nama_layanan FROM layanan";
+$result = $conn->query($sql);
+
+$options = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $options[] = [
+            'id' => $row["id_layanan"],
+            'price' => $row["harga_layanan"],
+            'name' => $row["nama_layanan"]
+        ];
+    }
+}
+$options_json = json_encode($options);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -144,19 +159,20 @@ if (!isset($_SESSION['id']) || !isset($_SESSION['user_name']) || !isset($_SESSIO
               <label class="form-label">Nama Pelanggan</label>
               <input type="name" name="nama_pelanggan" class="form-control">
             </div>
-            <div class="input-group input-group-outline my-4">
-            
-            <select class="form-control" name="jenis_layanan" id="jenisLayanan" required>
-          <option value="" selected disabled>Pilih Jenis Layanan</option>
-          <?php
-          if ($result->num_rows > 0) {
-            while($row = $result->fetch_assoc()) {
-              echo '<option value="' . $row["id_layanan"] . '" data-price="' . $row["harga_layanan"] . '">' . $row["nama_layanan"] . '</option>';
-            }
-          }
-          ?>
-        </select>
+            <div id="selectContainer" class="my-4">
+                <div class="input-group input-group-outline my-4">
+                    <select class="form-control" name="jenis_layanan[]" >
+                        <option value="" selected disabled>Pilih Jenis Layanan</option>
+                        <?php foreach ($options as $option): ?>
+                            <option value="<?= $option['id'] ?>" data-price="<?= $option['price'] ?>">
+                                <?= $option['name'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <input type="number" class="form-control ms-2" name="jumlah[]" min="1" value="1" required>
+                </div>
             </div>
+      
             <div class="input-group input-group-outline my-4  ">
               <label class="form-label">Uang Customer</label>
               <input type="number" name="uang_customer" id="uangCustomer" class="form-control" required>
@@ -166,6 +182,7 @@ if (!isset($_SESSION['id']) || !isset($_SESSION['user_name']) || !isset($_SESSIO
             <p class="text-end">Kembalian: Rp <span id="kembalian">0</span></p>
             </div>
             <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-primary me-2" id="addSelectBtn">Tambah Layanan</button>
             <button type="submit" class="btn bg-gradient-primary btn-link text-end">Bayar</button>
             </div>
           </div>
@@ -239,6 +256,99 @@ if (!isset($_SESSION['id']) || !isset($_SESSION['user_name']) || !isset($_SESSIO
  
   <!--   Core JS Files   -->
   <script src="../resources/js/core/script.js"></script>
+  
+  <script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const container = document.getElementById('selectContainer');
+    const uangCustomer = document.getElementById('uangCustomer');
+    const totalHargaElem = document.getElementById('totalHarga');
+    const kembalianElem = document.getElementById('kembalian');
+    const totalHargaHidden = document.getElementById('totalHargaHidden');
+
+    function updateTotal() {
+        // Ambil semua elemen select dan input jumlah di container
+        const selects = container.querySelectorAll('select[name="jenis_layanan[]"]');
+        const quantities = container.querySelectorAll('input[name="jumlah[]"]');
+        let totalHarga = 0;
+        
+        selects.forEach((select, index) => {
+            const selectedOption = select.options[select.selectedIndex];
+            const hargaLayanan = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+            const quantity = parseInt(quantities[index].value) || 0;
+            totalHarga += hargaLayanan * quantity;
+        });
+
+        const uangCustomerValue = parseFloat(uangCustomer.value) || 0;
+        let kembalian = uangCustomerValue - totalHarga;
+
+        totalHargaElem.textContent = totalHarga.toLocaleString('id-ID');
+        totalHargaHidden.value = totalHarga;
+
+        if (kembalian < 0) {
+            kembalianElem.textContent = "Uang tidak cukup";
+            kembalianElem.style.color = "red";
+        } else {
+            kembalianElem.textContent = kembalian.toLocaleString('id-ID');
+            kembalianElem.style.color = "black";
+        }
+    }
+
+    // Update total ketika ada perubahan pada semua elemen select dan input jumlah
+    container.addEventListener('change', updateTotal);
+    container.addEventListener('input', updateTotal);
+    uangCustomer.addEventListener('input', updateTotal);
+
+    document.getElementById('addSelectBtn').addEventListener('click', function() {
+        var newDiv = document.createElement('div');
+        newDiv.className = 'input-group input-group-outline my-4';
+
+        var newSelect = document.createElement('select');
+        newSelect.className = 'form-control';
+        newSelect.name = 'jenis_layanan[]';
+        newSelect.required = true;
+
+        var defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.text = 'Pilih Jenis Layanan';
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        newSelect.appendChild(defaultOption);
+
+        var options = <?= $options_json ?>;
+        options.forEach(function(option) {
+            var opt = document.createElement('option');
+            opt.value = option.id;
+            opt.setAttribute('data-price', option.price);
+            opt.text = option.name;
+            newSelect.appendChild(opt);
+        });
+
+        var quantityInput = document.createElement('input');
+        quantityInput.type = 'number';
+        quantityInput.className = 'form-control ms-2';
+        quantityInput.name = 'jumlah[]';
+        quantityInput.min = '1';
+        quantityInput.value = '1';
+        quantityInput.required = true;
+
+        var deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger m-0  p-2';
+        deleteButton.textContent = 'Hapus';
+        deleteButton.type = 'button';
+        deleteButton.addEventListener('click', function() {
+            container.removeChild(newDiv);
+            updateTotal();
+        });
+
+        newDiv.appendChild(newSelect);
+        newDiv.appendChild(quantityInput);
+        newDiv.appendChild(deleteButton);
+        container.appendChild(newDiv);
+    });
+});
+</script>
+
+
   <script src="../resources/js/core/popper.min.js"></script>
   <script src="../resources/js/core/bootstrap.min.js"></script>
   <script src="../resources/js/plugins/perfect-scrollbar.min.js"></script>
@@ -508,6 +618,3 @@ if (!isset($_SESSION['id']) || !isset($_SESSION['user_name']) || !isset($_SESSIO
 </body>
 
 </html>
- <?php 
-
-     ?>

@@ -7,14 +7,14 @@ if ($conn->connect_error) {
 }
 
 // Debugging: Tampilkan isi $_GET untuk memeriksa parameter (hapus setelah debugging)
-var_dump($_GET);
+// var_dump($_GET);
 
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['id_layanan'])) {
     // Mendapatkan nilai ID dari parameter GET
     $id = $_GET['id_layanan'];
     
-    // Validasi bahwa id_layanan adalah integer
-    if (filter_var($id, FILTER_VALIDATE_INT) !== false) {
+    // Validasi bahwa id_layanan adalah string atau tipe data lain yang sesuai
+    if (is_string($id) && !empty($id)) {
         // Menyiapkan pernyataan SQL untuk menghapus data profil berdasarkan ID
         $sql = "DELETE FROM layanan WHERE id_layanan = ?";
         
@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['id_layanan'])) {
         
         if ($stmt) {
             // Bind parameter ke pernyataan prepared statement
-            $stmt->bind_param("i", $id);
+            $stmt->bind_param("s", $id); // Gunakan "s" untuk string
             
             // Menjalankan pernyataan prepared statement dan menangani kesalahan
             if ($stmt->execute()) {

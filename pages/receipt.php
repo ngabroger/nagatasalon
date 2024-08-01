@@ -1,20 +1,36 @@
 <?php
 session_start();
-if (isset($_GET['nama_pelanggan']) && isset($_GET['tanggal_transaksi']) && 
-    isset($_GET['jenis_layanan']) && isset($_GET['total_harga']) && isset($_GET['uang_customer'])) {
+include('connection/db_conn.php');
 
+if (isset($_GET['id_transaksi']) && isset($_GET['nama_pelanggan']) && 
+    isset($_GET['tanggal_transaksi']) && isset($_GET['total_harga']) && 
+    isset($_GET['uang_customer'])) {
+
+    $id_transaksi = $_GET['id_transaksi'];
     $nama_pelanggan = $_GET['nama_pelanggan'];
     $tanggal_transaksi = $_GET['tanggal_transaksi'];
-    $jenis_layanan = $_GET['jenis_layanan'];
     $total_harga = $_GET['total_harga'];
     $uang_customer = $_GET['uang_customer'];
     $kembalian = $uang_customer - $total_harga;
     $nama_kasir = $_SESSION['name'];
+
+    // Ambil detail transaksi dari database
+    $sql = "SELECT nama_layanan, jumlah, harga FROM detail_transaksi WHERE transaksi_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_transaksi);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $transaksi_details = [];
+    while ($row = $result->fetch_assoc()) {
+        $transaksi_details[] = $row;
+    }
+    $stmt->close();
 } else {
     echo "Data transaksi tidak ditemukan.";
     exit();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -67,12 +83,26 @@ if (isset($_GET['nama_pelanggan']) && isset($_GET['tanggal_transaksi']) &&
         <p class="text-end m-0 ">from,<?php echo  $nama_kasir; ?></p>
         <hr class="border border-info border-1 opacity-50  m-0">
         <p class="text-center mt-3">Transaksi</p>
-        <div class="row">
+        <?php foreach ($transaksi_details as $detail): ?>
+            <div class="row">
             <div class="col-7">
-            <p class="text-start m-0"> <?php echo htmlspecialchars($jenis_layanan); ?> </p>
+                <p class="text-start m-0"><?php echo htmlspecialchars($detail['nama_layanan']); ?></p>
             </div>
-            <div class="col-5 m-0">
-           <p class="text-end">Rp <?php echo number_format($total_harga, 0, ',', '.'); ?></p>
+            <div class="col-2">
+                <p class="text-start m-0"><?php echo htmlspecialchars($detail['jumlah']); ?></p>
+            </div>
+            <div class="col-3">
+                <p class="text-end">Rp <?php echo number_format($detail['harga'], 0, ',', '.'); ?></p>
+            </div>
+        </div>
+        <?php endforeach; ?>
+        <hr class="border border-info border-1 opacity-50 m-0">
+        <div class="row">
+            <div class="col-6">
+                <p class="text-start m-0">Total Harga</p>
+            </div>
+            <div class="col-6">
+                <p class="text-end">Rp <?php echo number_format($total_harga, 0, ',', '.'); ?></p>
             </div>
         </div>
         <div class="row">

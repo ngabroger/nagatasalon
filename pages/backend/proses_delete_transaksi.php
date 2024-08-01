@@ -1,42 +1,51 @@
 <?php
 include('../connection/db_conn.php');
 
-// Debugging: Tampilkan isi $_GET untuk memeriksa parameter
-var_dump($_GET);
-
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['id_transaksi'])) {
     // Mendapatkan nilai ID dari parameter GET
     $id = $_GET['id_transaksi'];
     
-    // Validasi bahwa id_layanan adalah integer
+    // Validasi bahwa id_transaksi adalah integer
     if (filter_var($id, FILTER_VALIDATE_INT) !== false) {
-        // Menyiapkan pernyataan SQL untuk menghapus data profil berdasarkan ID
-        $sql = "DELETE FROM transaksi WHERE id_transaksi = ?";
-        
-        // Menyiapkan pernyataan prepared statement
-        $stmt = $conn->prepare($sql);
-        
-        // Bind parameter ke pernyataan prepared statement
-        $stmt->bind_param("i", $id);
-        
-        // Menjalankan pernyataan prepared statement dan menangani kesalahan
-        if ($stmt->execute()) {
-            // Jika penghapusan berhasil, arahkan kembali ke halaman utama
-            echo "<script>alert('Data Berhasil Dihapus.');window.location='../kelola.php';</script>";
-            exit(); // Pastikan untuk keluar setelah menggunakan header
-        } else {
-            // Jika terjadi kesalahan, tampilkan pesan kesalahan
-            echo "Error: " . $stmt->error;
+        // Mulai transaksi
+        $conn->begin_transaction();
+
+        try {
+            // Hapus dari detail_transaksi terlebih dahulu
+            $sql_detail = "DELETE FROM detail_transaksi WHERE transaksi_id = ?";
+            $stmt_detail = $conn->prepare($sql_detail);
+            $stmt_detail->bind_param("i", $id);
+            
+            if (!$stmt_detail->execute()) {
+                throw new Exception("Error: " . $stmt_detail->error);
+            }
+            $stmt_detail->close();
+
+            // Hapus dari transaksi
+            $sql_transaksi = "DELETE FROM transaksi WHERE id_transaksi = ?";
+            $stmt_transaksi = $conn->prepare($sql_transaksi);
+            $stmt_transaksi->bind_param("i", $id);
+
+            if ($stmt_transaksi->execute()) {
+                // Commit transaksi jika semuanya berhasil
+                $conn->commit();
+                echo "<script>alert('Data Berhasil Dihapus.');window.location='../transaksi.php';</script>";
+            } else {
+                throw new Exception("Error: " . $stmt_transaksi->error);
+            }
+
+            $stmt_transaksi->close();
+        } catch (Exception $e) {
+            // Rollback jika terjadi kesalahan
+            $conn->rollback();
+            echo $e->getMessage();
         }
-        
-        // Menutup prepared statement
-        $stmt->close();
+
+        $conn->close();
     } else {
-        // Jika id_layanan tidak valid, tampilkan pesan kesalahan
         echo "Parameter ID tidak valid.";
     }
 } else {
-    // Jika parameter tidak valid atau bukan metode GET, tampilkan pesan kesalahan
     echo "Parameter ID tidak valid atau bukan metode GET.";
 }
 ?>

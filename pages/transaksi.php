@@ -187,72 +187,79 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
         </tr>
       </thead>
       <tbody>
-        <?php 
-        include('connection/db_conn.php');
-       $no =1;
-       $limit = 10;
-       $page = isset($_GET['page']) ? $_GET['page']  : 1;
-       $start= ($page - 1) * $limit;
-        $query = "SELECT * FROM transaksi LIMIT $start, $limit ";
-        $result = $conn->query($query);
-        if ($result === false) {
-          die('Error: ' . $conn->error);
-      }
-     
-      if ($result->num_rows > 0) {
+    <?php 
+    include('connection/db_conn.php');
+    $no = 1;
+    $limit = 10;
+    $page = isset($_GET['page']) ? $_GET['page']  : 1;
+    $start = ($page - 1) * $limit;
+
+    // Query untuk mengambil data dari transaksi dan detail_transaksi
+    $query = "SELECT transaksi.id_transaksi, transaksi.tanggal_transaksi, transaksi.nama_pelanggan, transaksi.total,
+                     GROUP_CONCAT(CONCAT(detail_transaksi.nama_layanan, ' (', detail_transaksi.jumlah, ')') SEPARATOR ', ') as layanan
+              FROM transaksi
+              LEFT JOIN detail_transaksi ON transaksi.id_transaksi = detail_transaksi.transaksi_id
+              GROUP BY transaksi.id_transaksi
+              LIMIT $start, $limit";
+    $result = $conn->query($query);
+
+    if ($result === false) {
+        die('Error: ' . $conn->error);
+    }
+
+    if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
-          echo ("
-          <tr>
-            <td>
-              <div class=''>
-                <h6 class='text-sm font-weight-normal mb-0' >{$no}</h6>
-              </div>
-            </td>
-            
-            <td>
-              <div class=''>
-              <h6 class='text-sm font-weight-normal mb-0'>{$row['tanggal_transaksi']}</h6>
-              </div>
-            </td>
-            <td>
-              <div class=''>
-              <h6 class='text-sm font-weight-normal mb-0'>{$row['nama_pelanggan']}</h6>
-              </div>
-            </td>
-            <td>
-              <div class=''>
-              <h6 class='text-sm font-weight-normal mb-0'>{$row['jenis_layanan']}</h6>
-              </div>
-            </td>
-            <td>
-              <div class=''>
-              <h6 class='text-sm font-weight-normal mb-0'>{$row['total']}</h6>
-              </div>
-            </td>
-            <td class=' text-sm'>
-              <div class='col d-flex'>
-              <form action='backend/proses_delete_transaksi.php' class='me-1' method='get' id='deleteFormTransaksi_{$row['id_transaksi']}'>
-              <input type='hidden' name='id_transaksi' value='{$row['id_transaksi']}'>
-              </form>
-              <button class='btn btn-danger' onClick='showDeleteConfirmationTransaksi({$row['id_transaksi']})'><i class='material-icons'>delete</i></button>
-              <a data-bs-toggle='modal' data-bs-target='#staticBackdrop2{$row['id_transaksi']}' class='btn btn-warning'><i class='material-icons'>edit</i></a>
-            </div>
-              </div>
-            </td>
-           
-          </tr>
-          ");
-          $no++;
+            echo ("
+            <tr>
+                <td>
+                    <div class=''>
+                        <h6 class='text-sm font-weight-normal mb-0'>{$no}</h6>
+                    </div>
+                </td>
+                <td>
+                    <div class=''>
+                        <h6 class='text-sm font-weight-normal mb-0'>{$row['tanggal_transaksi']}</h6>
+                    </div>
+                </td>
+                <td>
+                    <div class=''>
+                        <h6 class='text-sm font-weight-normal mb-0'>{$row['nama_pelanggan']}</h6>
+                    </div>
+                </td>
+                <td>
+                    <div class=''>
+                        <h6 class='text-sm font-weight-normal mb-0'>{$row['layanan']}</h6>
+                    </div>
+                </td>
+                <td>
+                    <div class=''>
+                        <h6 class='text-sm font-weight-normal mb-0'>Rp " . number_format($row['total'], 0, ',', '.') . "</h6>
+                    </div>
+                </td>
+                <td class='text-sm'>
+                    <div class='col d-flex'>
+                        <form action='backend/proses_delete_transaksi.php' class='me-1' method='get'>
+                            <input type='hidden' name='id_transaksi' value='{$row['id_transaksi']}'>
+                            <button class='btn btn-danger' type='submit'><i class='material-icons'>delete</i></button>
+                        </form>
+              
+                    </div>
+                </td>
+            </tr>
+            ");
+            $no++;
         }
-      } else {
-          // Menampilkan pesan jika data tidak ditemukan
-          echo "<tr><td class='text-center' colspan='7'>Data not found.</td></tr>";
-      }
-     
-      
-      $conn->close();
-        ?>
-      </tbody>
+    } else {
+        // Menampilkan pesan jika data tidak ditemukan
+        echo "<tr><td class='text-center' colspan='6'>Data not found.</td></tr>";
+    }
+
+    $conn->close();
+    ?>
+</tbody>
+
+
+
               </table>
             </div>
             <div class="justify-content-center m-0 w-full p-0">
@@ -357,227 +364,6 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
       </div>
     </div>
   </div>
-  <!-- MODAL ADD LAYANAN -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-primary justify-content-center d-flex">
-        <h5 class="modal-title fs-3 text-white" id="exampleModalLabel">Tambah Layanan</h5>
-      
-      </div>
-      <div class="modal-body">
-        <form action="backend/proses_tambah_layanan.php" method="post" id="tambahLayananForm">
-        <div class="input-group input-group-outline my-3">
-          <label class="form-label">Nama Layanan</label>
-          <input type="text" name="nama_layanan" class="form-control">
-        </div>
-        <div class="input-group input-group-outline mb-3">
-          <label class="form-label">Harga</label>
-          <input type="text" name="harga_layanan" class="form-control">
-        </div>          
-                      
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit " form="tambahLayananForm"  class="btn bg-gradient-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-  <!-- MODAL ADD END -->
-  <!-- MODAL ADD USER -->
-  <div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-primary justify-content-center d-flex">
-        <h5 class="modal-title fs-3 text-white" id="exampleModalLabel">Tambah User</h5>
-      
-      </div>
-      <div class="modal-body">
-        <form action="backend/proses_tambah_user.php" method="post" id="tambahuserForm">
-        <div class="input-group input-group-outline my-3">
-          <label class="form-label">Nama User</label>
-          <input type="name" name="nama_user" class="form-control">
-        </div>
-        <div class="input-group input-group-outline my-3">
-        <select name="role_user" class="form-control" id="roleuser">
-        <option value="" selected disabled>Pilih Jenis Role</option>
-        <option value="kasir">Kasir</option>
-        <option value="owner">Owner</option>
-        </select>
-        </div>
-               
-        <div class="input-group input-group-outline my-3">
-          <label class="form-label">Username</label>
-          <input type="text" name="username" class="form-control">
-        </div>       
-        <div class="input-group input-group-outline my-3">
-          <label class="form-label">Password</label>
-          <input type="text" name="password" class="form-control">
-        </div>       
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit " form="tambahuserForm"  class="btn bg-gradient-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-  <!-- MODAL ADD END -->
-
- <!-- MODAL ENTRY FOR  EDIT LAYANAN-->
- <?php
-    include ('connection/db_conn.php');
-    $result = mysqli_query($conn, "SELECT * FROM layanan");
-    while ($d = mysqli_fetch_assoc($result)) {
-        echo "
-        <div class='modal fade' id='staticBackdrop1{$d['id_layanan']}' data-bs-backdrop='static' data-bs-keyboard='false' tabindex='-1' aria-labelledby='staticBackdropLabel' aria-hidden='true'>
-        <div class='modal-dialog modal-dialog-centered'>
-        <div class='modal-content'>
-        <div class='modal-header bg-primary justify-content-center d-flex'>
-        <h1 class='modal-title fs-3 text-white' id='staticBackdropLabel'>Edit Layanan</h1>
-        </div>
-            <form action='backend/proses_edit_layanan.php' method='post' role='form'>
-                <div class='modal-body'>
-                    <div class='form-group'>
-                        <div class='row'>
-                            <input type='hidden' name='id' value='{$d['id_layanan']}'>
-                            <div class='input-group input-group-outline my-3'>
-                                <input type='text' id='nama' name='nama_layanan' class='form-control' value='{$d['nama_layanan']}' required='' placeholder='' />
-                            </div>
-                            <div class='input-group input-group-outline my-3'>
-                                <input type='text' id='harga' name='harga_layanan' class='form-control' value='{$d['harga_layanan']}' required='' placeholder='' />
-                            </div>
-                        </div>
-                    </div>
-                    <div class='modal-footer'>
-                        <button type='button' class='btn btn-danger' data-bs-dismiss='modal'>Close</button>
-                        <button type='submit' class='btn btn-success'>Submit</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        </div>
-        </div>";
-    }
-?>
- <!-- MODAL END FOR EDIT LAYANAN -->
- <!-- MODAL ENTRY FOR  EDIT TRANSAKSI-->
- <?php
-    include ('connection/db_conn.php');
-    // Ambil daftar jenis layanan
-$layananQuery = "SELECT id_layanan, nama_layanan FROM layanan";
-$layananResult = $conn->query($layananQuery);
-
-// Simpan hasil dalam array
-$layananList = [];
-if ($layananResult->num_rows > 0) {
-    while ($row = $layananResult->fetch_assoc()) {
-        $layananList[] = $row;
-    }
-}
-    $result = mysqli_query($conn, "SELECT * FROM transaksi");
-    while ($d = mysqli_fetch_assoc($result)) {
-        echo "
-        <div class='modal fade' id='staticBackdrop2{$d['id_transaksi']}' data-bs-backdrop='static' data-bs-keyboard='false' tabindex='-1' aria-labelledby='staticBackdropLabel' aria-hidden='true'>
-        <div class='modal-dialog modal-dialog-centered'>
-        <div class='modal-content'>
-        <div class='modal-header bg-primary justify-content-center d-flex'>
-        <h1 class='modal-title fs-3 text-white' id='staticBackdropLabel'>Edit Transaksi</h1>
-        </div>
-            <form action='backend/proses_edit_transaksi.php' method='post' role='form'>
-                <div class='modal-body'>
-                    <div class='form-group'>
-                        <div class='row'>
-                            <input type='hidden' name='id' value='{$d['id_transaksi']}'>
-                            <div class='input-group input-group-outline my-3'>
-                                <input type='text' id='nama' name='tanggal_transaksi' class='form-control required' value='{$d['tanggal_transaksi']}' required='' placeholder='' />
-                            </div>
-                            <div class='input-group input-group-outline my-3'>
-                                <input type='text' id='harga' name='nama_pelanggan' class='form-control required' value='{$d['nama_pelanggan']}' required='' placeholder='' />
-                            </div>
-                            <div class='input-group input-group-outline my-3'>
-                            <select class='form-control' name='jenis_layanan' id='jenisLayanan' required>
-                           ";
-                            
-                           foreach ($layananList as $layanan) {
-                            $selected = $d['jenis_layanan'] == $layanan['nama_layanan'] ? 'selected' : '';
-                            echo "<option value='{$layanan['nama_layanan']}' $selected>{$layanan['nama_layanan']}</option>";
-                        }
-                        
-                          echo "  
-                          </select>
-                               
-                            </div>
-                            <div class='input-group input-group-outline my-3'>
-                                <input type='text' id='harga' name='total' class='form-control required' value='{$d['total']}' required='' placeholder='' />
-                            </div>
-                        </div>
-                    </div>
-                    <div class='modal-footer'>
-                        <button type='button' class='btn btn-danger' data-bs-dismiss='modal'>Close</button>
-                        <button type='submit' class='btn btn-success'>Submit</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        </div>
-        </div>";
-    }
-?>
- <!-- MODAL END FOR EDIT TRANSAKSI -->
-
- <!-- MODAL ENTRY FOR  EDIT USER-->
- <?php
-    include ('connection/db_conn.php');
-    $result = mysqli_query($conn, "SELECT * FROM users");
-    while ($d = mysqli_fetch_assoc($result)) {
-        echo "
-        <div class='modal fade' id='editModal{$d['id']}' data-bs-backdrop='static' data-bs-keyboard='false' tabindex='-1' aria-labelledby='staticBackdropLabel' aria-hidden='true'>
-        <div class='modal-dialog modal-dialog-centered'>
-        <div class='modal-content'>
-        <div class='modal-header bg-primary justify-content-center d-flex'>
-        <h1 class='modal-title fs-3 text-white' id='staticBackdropLabel'>Edit User</h1>
-        </div>
-            <form action='backend/proses_edit_users.php' method='post' role='form'>
-                <div class='modal-body'>
-                    <div class='form-group'>
-                        <div class='row'>
-                            <input type='hidden' name='id' value='{$d['id']}'>
-                            <div class='input-group input-group-outline my-3'>
-                                <input type='text' id='name' name='name' class='form-control' value='{$d['name']}' required='' placeholder='' />
-                            </div>
-                            <div class='input-group input-group-outline my-3'>
-                                <input type='text' id='username' name='username' class='form-control' value='{$d['user_name']}' required='' placeholder='' />
-                            </div>
-                            <div class='input-group input-group-outline my-3'>
-                                <input type='text' id='password' name='password' class='form-control' value='{$d['password']}' required='' placeholder='' />
-                            </div>
-                            <div class='input-group input-group-outline my-3'>
-                              <select name='role_user' class='form-control' id='roleuser'>
-                               
-                                <option value='kasir'>Kasir</option>
-                                <option value='owner'>Owner</option>
-                              </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class='modal-footer'>
-                        <button type='button' class='btn btn-danger' data-bs-dismiss='modal'>Close</button>
-                        <button type='submit' class='btn btn-success'>Submit</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        </div>
-        </div>";
-    }
-?>
- <!-- MODAL END FOR EDIT USER -->
  
   <!--   Core JS Files   -->
 
