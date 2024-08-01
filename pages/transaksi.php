@@ -11,31 +11,24 @@ if ($_SESSION['role'] !== 'owner') {
 // Periksa apakah pengguna sudah login
 if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
   include('connection/db_conn.php');
+  $sql = "SELECT SUM(total) AS total_pemasukan FROM transaksi WHERE tanggal_transaksi >= NOW() - INTERVAL 7 DAY";
+  $result = $conn->query($sql);
+  
+  if ($result->num_rows > 0) {
+      $row = $result->fetch_assoc();
+      $total_pemasukan = $row['total_pemasukan'];
+  } else {
+      $total_pemasukan = 0;
+  }
+  $sql = "SELECT COUNT(DISTINCT id_transaksi) AS total_pelanggan FROM transaksi";
+  $result = $conn->query($sql);
 
-
-$now = new DateTime();
-$mondayThisWeek = $now->modify('monday this week')->format('Y-m-d');
-
-
-$sql = "SELECT SUM(total) AS total_pemasukan FROM transaksi WHERE tanggal_transaksi >= '$mondayThisWeek'";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $total_pemasukan = $row['total_pemasukan'];
-} else {
-    $total_pemasukan = 0;
-}
-
-$sql = "SELECT COUNT(DISTINCT id_transaksi) AS total_pelanggan FROM transaksi WHERE tanggal_transaksi >= '$mondayThisWeek'";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $total_pelanggan = $row['total_pelanggan'];
-} else {
-    $total_pelanggan = 0;
-}
+  if ($result->num_rows > 0) {
+      $row = $result->fetch_assoc();
+      $total_pelanggan = $row['total_pelanggan'];
+  } else {
+      $total_pelanggan = 0;
+  }
 } else {
   // Jika pengguna belum login, arahkan mereka kembali ke halaman login
   header("Location: index.php");
@@ -52,7 +45,7 @@ if ($result->num_rows > 0) {
   <link rel="apple-touch-icon" sizes="76x76" href="../resources/img/apple-icon.png">
   <link rel="icon" type="image/png" href="../resources/img/favicon.png">
   <title>
-  Nagata Salon | Kelola
+  Nagata Salon | Transaksi
   </title>
   <!--     Fonts and icons     -->
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700" />
@@ -109,7 +102,7 @@ if ($result->num_rows > 0) {
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-white active bg-gradient-primary" href="#">
+          <a class="nav-link text-white" href="../pages/kelola.php">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
               <i class="material-icons opacity-10">table_view</i>
             </div>
@@ -117,13 +110,14 @@ if ($result->num_rows > 0) {
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-white " href="transaksi.php">
+          <a class="nav-link text-white active bg-gradient-primary" href="#">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
               <i class="material-icons opacity-10">receipt_long</i>
             </div>
             <span class="nav-link-text ms-1">Transaksi</span>
           </a>
         </li>
+       
       </ul>
     </div>
     
@@ -135,9 +129,9 @@ if ($result->num_rows > 0) {
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
             <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Kelola</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Transaksi</li>
           </ol>
-          <h6 class="font-weight-bolder mb-0">Kelola</h6>
+          <h6 class="font-weight-bolder mb-0">Transaksi</h6>
         </nav>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
           <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -172,60 +166,21 @@ if ($result->num_rows > 0) {
     <!-- End Navbar -->
     <div class="container-fluid py-4">
     <div class="row ">
-        <div class="col-xl-9 col-md-6 mb-3">
-          <div class="card h-100">
-            <div class="card-header p-3 pt-2">
-              <div class="icon icon-lg icon-shape bg-gradient-info shadow-info text-center border-radius-xl mt-n4 position-absolute">
-                <i class="material-icons opacity-10">account_balance</i>
-              </div>
-              <div class="text-end pt-1">
-                <p class="text-sm mb-0 text-capitalize">Pemasukan</p>
-                <h4 class="mb-0 fs-2">Rp. <?php echo number_format($total_pemasukan, 0, ',', '.');?>/Minggu</h4>
-              </div>
-            </div>
-            <hr class="dark horizontal my-0">
-            <div class="card-footer p-2 ">
-              <a href="backend/export-transaksi.php" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Download dalam bentuk excel" data-container="body" data-animation="true"><i class="material-icons">download</i> Download</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-3 ">
-          <div class="card h-100">
-            <div class="card-header p-3 pt-2">
-              <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xl mt-n4 position-absolute">
-                <i class="material-icons opacity-10">group</i>
-              </div>
-              <div class="text-end pt-1">
-                <p class="text-sm mb-0 text-capitalize">Total Transaksi</p>
-                <h4 class="mb-0"><?php echo $total_pelanggan; ?>/Minggu</h4>
-              </div>
-            </div>
-            <hr class="dark horizontal my-0">
-            <div class="card-footer p-4">
-              <p class="mb-0"><span class="text-success text-sm font-weight-bolder"></p>
-            </div>
-          </div>
-        </div>
-        
-      </div>
-      <div class="row" style="max-height: 100%;">
-      
-     
-        <div class="col-md-12 col-xl-6" >
+       
+    <div class="mt-4" >
         <div class="  d-flex justify-content-end " >
-        <div class="position-absolute ms-5"style="z-index: 100;">
-          <a  data-bs-toggle="modal" data-bs-target="#exampleModal" class="btn btn-primary"><i class="material-icons">add</i></a>
+       
         </div>
-        
-        </div>
-          <div class="card p-3" style="height: 350px;">
+          <div class="card p-3" >
             <div class="table-responsive">
               <table class="table align-items-center mb-0">
               <thead>
         <tr>
           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nomor Layanan</th>
-          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nama Layanan</th>
-          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Harga Layanan</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Tanggal Transaksi</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nama  Pelanggan</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Jenis Layanan</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Total</th>
           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Action</th>
        
          
@@ -233,9 +188,12 @@ if ($result->num_rows > 0) {
       </thead>
       <tbody>
         <?php 
+        include('connection/db_conn.php');
        $no =1;
-
-        $query = "SELECT * FROM layanan ";
+       $limit = 10;
+       $page = isset($_GET['page']) ? $_GET['page']  : 1;
+       $start= ($page - 1) * $limit;
+        $query = "SELECT * FROM transaksi LIMIT $start, $limit ";
         $result = $conn->query($query);
         if ($result === false) {
           die('Error: ' . $conn->error);
@@ -253,21 +211,31 @@ if ($result->num_rows > 0) {
             
             <td>
               <div class=''>
-                <h6 class='text-sm font-weight-normal mb-0'>{$row['nama_layanan']}</h6>
+              <h6 class='text-sm font-weight-normal mb-0'>{$row['tanggal_transaksi']}</h6>
               </div>
             </td>
             <td>
               <div class=''>
-              <h6 class='text-sm font-weight-normal mb-0'>Rp.{$row['harga_layanan']}</h6>
+              <h6 class='text-sm font-weight-normal mb-0'>{$row['nama_pelanggan']}</h6>
+              </div>
+            </td>
+            <td>
+              <div class=''>
+              <h6 class='text-sm font-weight-normal mb-0'>{$row['jenis_layanan']}</h6>
+              </div>
+            </td>
+            <td>
+              <div class=''>
+              <h6 class='text-sm font-weight-normal mb-0'>{$row['total']}</h6>
               </div>
             </td>
             <td class=' text-sm'>
               <div class='col d-flex'>
-              <form action='backend/proses_delete_layanan.php' class='me-1' method='get' id='deleteForm_{$row['id_layanan']}'>
-              <input type='hidden' name='id_layanan' value='{$row['id_layanan']}'>
+              <form action='backend/proses_delete_transaksi.php' class='me-1' method='get' id='deleteFormTransaksi_{$row['id_transaksi']}'>
+              <input type='hidden' name='id_transaksi' value='{$row['id_transaksi']}'>
               </form>
-              <button class='btn btn-danger' onClick='showDeleteConfirmation({$row['id_layanan']})'><i class='material-icons'>delete</i></button>
-              <a data-bs-toggle='modal' data-bs-target='#staticBackdrop1{$row['id_layanan']}' class='btn btn-warning'><i class='material-icons'>edit</i></a>
+              <button class='btn btn-danger' onClick='showDeleteConfirmationTransaksi({$row['id_transaksi']})'><i class='material-icons'>delete</i></button>
+              <a data-bs-toggle='modal' data-bs-target='#staticBackdrop2{$row['id_transaksi']}' class='btn btn-warning'><i class='material-icons'>edit</i></a>
             </div>
               </div>
             </td>
@@ -287,102 +255,46 @@ if ($result->num_rows > 0) {
       </tbody>
               </table>
             </div>
+            <div class="justify-content-center m-0 w-full p-0">
+            <?php
+                      // Include file koneksi database
+                      include "connection/db_conn.php";
+
+                      // Query untuk mendapatkan total data
+                      $queryTotal = "SELECT COUNT(id_transaksi) as total FROM transaksi";
+                      $resultTotal = $conn->query($queryTotal);
+                      $dataTotal = $resultTotal->fetch_assoc();
+                      $totalPages = ceil($dataTotal['total'] / $limit);
+
+                      // Menentukan halaman saat ini
+                      $current_page = isset($_GET['page']) ? $_GET['page'] : 1;
+
+                      // Menampilkan tombol "Previous" jika halaman saat ini lebih dari 1
+                      echo '<ul class="pagination justify-content-center">';
+                      if ($current_page > 1) {
+                          echo '<li class="page-item"><a class="page-link " href="?page=' . ($current_page - 1) . '"><i class="material-icons">arrow_back_ios</i></a></li>';
+                      }
+
+                      // Menampilkan nomor-nomor halaman
+                      for ($i = 1; $i <= $totalPages; $i++) {
+                        echo '<li class="page-item ' . ($current_page == $i ? 'active ' : '') . '"><a class="page-link " href="?page=' . $i . '">' . $i . '</a></li>';
+                      }
+                      // Menampilkan tombol "Next" jika halaman saat ini kurang dari total halaman
+                      if ($current_page < $totalPages) {
+                          echo '<li class="page-item"><a class="page-link " href="?page=' . ($current_page + 1) . '"><i class="material-icons">arrow_forward_ios</i></a></li>';
+                      }
+
+                      echo '</ul>';
+
+                      $conn->close();
+                      ?>
+               </div>
           </div>
       
         </div>
-        <!-- AKUN TABLE -->
-        <div class="col-md-12 col-xl-6" >
-        <div class="  d-flex justify-content-end " >
-        <div class="position-absolute ms-5"style="z-index: 100;">
-          <a  data-bs-toggle="modal" data-bs-target="#exampleModal2" class="btn btn-primary"><i class="material-icons">add</i></a>
-        </div>
-        
-        </div>
-          <div class="card p-3" style="height: 350px;">
-            <div class="table-responsive">
-              <table class="table align-items-center mb-0">
-              <thead>
-        <tr>
-          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nomor Users</th>
-          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Nama User</th>
-          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Password User</th>
-          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Role User</th>
-          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Action</th>
-       
-         
-        </tr>
-      </thead>
-      <tbody>
-        <?php 
-        include ('connection/db_conn.php');
-        $no = 1;
-        $page = isset($_GET['page']) ? $_GET['page']  : 1;
-       
-
-        $query = "SELECT * FROM users";
-        $result = $conn->query($query);
-        if ($result === false) {
-          die('Error: ' . $conn->error);
-      }
-      if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-          echo ("
-          <tr>
-            <td>
-              <div class=''>
-                <h6 class='text-sm font-weight-normal mb-0' >{$no}</h6>
-              </div>
-            </td>
-            <td>
-              <div class=''>
-                <h6 class='text-sm font-weight-normal mb-0'>{$row['name']}</h6>
-              </div>
-            </td>
-            <td>
-              <div class=''>
-              <h6 class='text-sm font-weight-normal mb-0'>{$row['password']}</h6>
-              </div>
-            </td>
-            <td>
-              <div class=''>
-              <h6 class='text-sm font-weight-normal mb-0'>{$row['role']}</h6>
-              </div>
-            </td>
-            <td class=' text-sm'>
-              <div class='col d-flex'>
-              <form action='backend/proses_delete_user.php' class='me-1' method='get' id='deleteFormUser_{$row['id']}'>
-                <input type='hidden' name='id' value='{$row['id']}'>
-                </form>
-                <a href='#' class='btn btn-danger' onClick='showDeleteConfirmationUser({$row['id']})'><i class='material-icons'>delete</i></a>
-              <a data-bs-toggle='modal' data-bs-target='#editModal{$row['id']}' class='btn btn-warning'><i class='material-icons'>edit</i></a>
-            </div>
-              </div>
-            </td>
-           
-          </tr>
-          ");
-          $no++;
-        }
-      } else {
-          // Menampilkan pesan jika data tidak ditemukan
-          echo "<tr><td class='text-center' colspan='7'>Data not found.</td></tr>";
-      }
-     
-      
-      $conn->close();
-        ?>
-      </tbody>
-              </table>
-            </div>
-          </div>
-         
-        </div>
-      </div>
-
-
 
       <!-- TABLE TRANSAKSI -->
-     
+      
     </div>
   </main>
   <div class="fixed-plugin">
