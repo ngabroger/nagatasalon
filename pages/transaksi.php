@@ -190,7 +190,7 @@ if (isset($_SESSION['id']) && isset($_SESSION['user_name'])) {
         <?php 
         include('connection/db_conn.php');
        $no =1;
-       $limit = 5;
+       $limit = 10;
        $page = isset($_GET['page']) ? $_GET['page']  : 1;
        $start= ($page - 1) * $limit;
         $query = "SELECT * FROM transaksi LIMIT $start, $limit ";

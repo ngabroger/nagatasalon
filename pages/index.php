@@ -37,10 +37,10 @@
             <div class="card z-index-0 fadeIn3 fadeInBottom">
               <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
                 <div class="bg-gradient-primary shadow-primary border-radius-lg py-3 pe-1">
-                  <h4 class="text-white font-weight-bolder text-center mt-2 mb-0">Sign in</h4>
+                  <h4 class="text-white font-weight-bolder text-center mt-2 mb-0">Login</h4>
                   <div class="row mt-3">
                     <div class="col-12 text-center ms-auto">
-                        <p class="text-bold text-white text-lg"> Salon Nagata</p>
+                        <p class="text-bold text-white text-lg">Barbershop Salon Nagata</p>
                     </div>
                     
                   </div>
@@ -60,7 +60,7 @@
                     <input type="password" name="password" class="form-control">
                   </div>
                   <div class="text-center">
-                    <button type="submit" class="btn bg-gradient-primary w-100 my-4 mb-2">Sign in</button>
+                    <button type="submit" class="btn bg-gradient-primary w-100 my-4 mb-2">Login</button>
                   </div>
                  
                 </form>
